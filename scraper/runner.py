@@ -6,9 +6,10 @@ from .auth import AuthSession
 from .homework_parser import parse_homework_for_today
 
 # Placeholder selectors and URLs; update for your site
-LOGIN_URL = "https://lgn.edu.gov.il/nidp/wsfed/ep?id=EduCombinedAuthUidPwd&sid=0&option=credential&sid=0"
+# LOGIN_URL = "https://lgn.edu.gov.il/nidp/wsfed/ep?id=EduCombinedAuthUidPwd&sid=0&option=credential&sid=0"
+LOGIN_URL = "https://webtop.smartschool.co.il/account/login"
 USERNAME_SELECTOR = "#userName"
-PASSWORD_SELECTOR = "#password"
+PASSWORD_SELECTOR = "input[formcontrolname='password'][type='password']"
 SUBMIT_SELECTOR = "button[type=submit]"
 TARGET_URL = "https://school.example.com/homework/today"
 
