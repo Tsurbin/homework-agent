@@ -55,6 +55,5 @@ python scheduler.py
 
 ## Next Steps
 
-- Phase 2: Add AI agent for natural language queries
 - Phase 3: WhatsApp integration
 - Phase 4: Full automation and error handling
