@@ -1,0 +1,19 @@
+{
+  "scraper": {
+    "login_url": "https://school.example.com/login",
+    "username_selector": "#username",
+    "password_selector": "#password", 
+    "submit_selector": "button[type=submit]",
+    "target_url": "https://school.example.com/homework/today",
+    "homework_selectors": {
+      "row": "tr.homework-row",
+      "subject": ".subject",
+      "description": ".description",
+      "due_date": ".due-date"
+    }
+  },
+  "scheduler": {
+    "daily_time": "18:00",
+    "timezone": "UTC"
+  }
+}

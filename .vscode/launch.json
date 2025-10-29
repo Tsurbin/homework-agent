@@ -1,0 +1,117 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Homework Agent",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": ["--scrape"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug Scheduler",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scheduler.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug Scraper Module",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scraper/runner.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug Agent: Interactive Mode",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_agent.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--interactive"
+            ],
+            "python": "${workspaceFolder}/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug Agent: Single Question (Today)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_agent.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--question",
+                "What's my homework for today?"
+            ],
+            "python": "${workspaceFolder}/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug Agent: Dry Run",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_agent.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--question",
+                "List homework",
+                "--dry-run"
+            ],
+            "python": "${workspaceFolder}/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug Agent: Specific Date",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_agent.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--date",
+                "2025-10-26",
+                "--question",
+                "What homework do I have?"
+            ],
+            "python": "${workspaceFolder}/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Debug Scrape All Historical",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": ["--scrape-all"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+    ]
+}
