@@ -7,7 +7,6 @@ from .homework_parser import parse_homework_for_today
 from .historical_parser import parse_all_historical_homework
 
 # Placeholder selectors and URLs; update for your site
-# LOGIN_URL = "https://lgn.edu.gov.il/nidp/wsfed/ep?id=EduCombinedAuthUidPwd&sid=0&option=credential&sid=0"
 LOGIN_URL = "https://webtop.smartschool.co.il/account/login"
 USERNAME_SELECTOR = "#userName"
 PASSWORD_SELECTOR = "input[formcontrolname='password'][type='password']"
@@ -50,7 +49,17 @@ def run_scrape_all_historical() -> int:
         
         # Now navigate to the historical homework page
         logger.info(f"Navigating to historical homework page: {HISTORICAL_URL}")
-        page.goto(HISTORICAL_URL, wait_until="networkidle", timeout=30000)
+        try:
+            # Add a small delay before navigation
+            page.wait_for_timeout(2000)
+            page.goto(HISTORICAL_URL, wait_until="load", timeout=30000)
+            # Wait a bit more for the page to stabilize
+            page.wait_for_timeout(3000)
+        except Exception as e:
+            logger.error(f"Failed to navigate to historical page: {e}")
+            # Try again with different wait strategy
+            logger.info("Retrying navigation...")
+            page.goto(HISTORICAL_URL, wait_until="commit", timeout=30000)
         
         # Wait for the page to fully load
         page.wait_for_selector("app-multi-cards-view", timeout=15000)

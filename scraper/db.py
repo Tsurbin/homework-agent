@@ -13,9 +13,9 @@ class HomeworkItem:
     date: str  # YYYY-MM-DD
     subject: str
     description: str
+    hour: str = None  # The lesson hour (שעה) - e.g., "שיעור 1", "שיעור 2"
     due_date: Optional[str] = None  # YYYY-MM-DD
     homework_text: Optional[str] = None  # The actual homework assignment text
-    source: Optional[str] = None
     # use a timezone-aware ISO8601 timestamp generated at instance-creation time
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -47,14 +47,23 @@ class HomeworkDB:
                     date TEXT NOT NULL,
                     subject TEXT NOT NULL,
                     description TEXT NOT NULL,
+                    hour TEXT,
                     due_date TEXT,
                     homework_text TEXT,
-                    source TEXT,
                     created_at TEXT NOT NULL
                 );
             ''')
+            # Add the hour column if it doesn't exist (for existing databases)
+            try:
+                conn.execute('ALTER TABLE homework ADD COLUMN hour TEXT')
+            except sqlite3.OperationalError:
+                # Column already exists
+                pass
             conn.execute('''
                 CREATE INDEX IF NOT EXISTS idx_homework_date ON homework(date);
+            ''')
+            conn.execute('''
+                CREATE INDEX IF NOT EXISTS idx_homework_date_hour_subject ON homework(date, hour, subject);
             ''')
             # pages table for raw HTML snapshots & metadata
             conn.execute('''
@@ -73,35 +82,69 @@ class HomeworkDB:
             conn.commit()
 
     def upsert_items(self, items: Iterable[HomeworkItem]) -> int:
-        # naive dedup: date+subject+description unique
+        # Smart deduplication: date + hour + subject as the unique key
+        # Only update if homework content has actually changed
         count = 0
         with self._connect() as conn:
+            # Drop the old unique index and create a new one based on date + hour + subject
+            conn.execute('DROP INDEX IF EXISTS uq_homework')
             conn.execute('''
-                CREATE UNIQUE INDEX IF NOT EXISTS uq_homework ON homework(date, subject, description);
+                CREATE UNIQUE INDEX IF NOT EXISTS uq_homework_date_hour_subject 
+                ON homework(date, hour, subject)
             ''')
+            
             for item in items:
-                try:
-                    conn.execute(
-                        '''INSERT INTO homework(date, subject, description, due_date, homework_text, source, created_at)
-                           VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                        (item.date, item.subject, item.description, item.due_date, item.homework_text, item.source, item.created_at)
-                    )
-                    count += 1
-                except sqlite3.IntegrityError:
-                    # already exists; skip
-                    pass
+                # Check if an entry with the same date, hour, and subject already exists
+                existing = conn.execute(
+                    '''SELECT id, homework_text, description FROM homework 
+                       WHERE date = ? AND hour = ? AND subject = ?''',
+                    (item.date, item.hour, item.subject)
+                ).fetchone()
+                
+                if existing:
+                    existing_id, existing_homework_text, existing_description = existing
+                    
+                    # Check if anything meaningful has changed
+                    homework_changed = (existing_homework_text or '') != (item.homework_text or '')
+                    description_changed = existing_description != item.description
+                    
+                    if homework_changed or description_changed:
+                        # Update the existing record
+                        conn.execute(
+                            '''UPDATE homework 
+                               SET description = ?, due_date = ?, homework_text = ?, 
+                                   created_at = ?
+                               WHERE id = ?''',
+                            (item.description, item.due_date, item.homework_text, 
+                             item.created_at, existing_id)
+                        )
+                        count += 1
+                    # If nothing changed, skip silently
+                else:
+                    # Insert new record
+                    try:
+                        conn.execute(
+                            '''INSERT INTO homework(date, subject, description, hour, due_date, homework_text, created_at)
+                               VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                            (item.date, item.subject, item.description, item.hour, item.due_date, item.homework_text, item.created_at)
+                        )
+                        count += 1
+                    except sqlite3.IntegrityError:
+                        # Should not happen with the new logic, but just in case
+                        pass
+            
             conn.commit()
         return count
 
     def list_by_date(self, date: str) -> List[HomeworkItem]:
         with self._connect() as conn:
-            cur = conn.execute('SELECT id, date, subject, description, due_date, homework_text, source, created_at FROM homework WHERE date = ? ORDER BY subject', (date,))
+            cur = conn.execute('SELECT id, date, subject, description, hour, due_date, homework_text, created_at FROM homework WHERE date = ? ORDER BY hour, subject', (date,))
             rows = cur.fetchall()
         return [HomeworkItem(*row) for row in rows]
     
     def list(self) -> List[HomeworkItem]:
         with self._connect() as conn:
-            cur = conn.execute('SELECT id, date, subject, description, due_date, homework_text, source, created_at FROM homework ORDER BY date, subject', ())
+            cur = conn.execute('SELECT id, date, subject, description, hour, due_date, homework_text, created_at FROM homework ORDER BY date, hour, subject', ())
             rows = cur.fetchall()
         return [HomeworkItem(*row) for row in rows]
 

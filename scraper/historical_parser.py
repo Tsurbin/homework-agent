@@ -130,9 +130,9 @@ def parse_all_historical_homework(page: Page) -> List[HomeworkItem]:
                 date=date_str,
                 subject=subject,
                 description=full_description,
+                hour=lesson_num,  # Add the lesson hour/number
                 due_date=None,  # Due date not available in this structure
-                homework_text=homework_text if homework_text else None,
-                source=page.url
+                homework_text=homework_text if homework_text else None
             ))
     
     logger.info(f"Parsed {len(items)} homework items from historical data")

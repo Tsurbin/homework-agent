@@ -44,8 +44,7 @@ def parse_homework_for_today(page: Page) -> List[HomeworkItem]:
             subject=subject,
             description=full_description,
             due_date=None,  # Due date not available in current structure
-            homework_text=homework_text if homework_text and homework_text != "לא הוזן" else None,
-            source=page.url
+            homework_text=homework_text if homework_text and homework_text != "לא הוזן" else None
         ))
     
     return items
