@@ -47,6 +47,7 @@
             "args": [
                 "--interactive"
             ],
+            "cwd": "${workspaceFolder}",
             "python": "${workspaceFolder}/venv/bin/python",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
@@ -62,6 +63,7 @@
                 "--question",
                 "What's my homework for today?"
             ],
+            "cwd": "${workspaceFolder}",
             "python": "${workspaceFolder}/venv/bin/python",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
@@ -78,6 +80,7 @@
                 "List homework",
                 "--dry-run"
             ],
+            "cwd": "${workspaceFolder}",
             "python": "${workspaceFolder}/venv/bin/python",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
@@ -91,10 +94,11 @@
             "console": "integratedTerminal",
             "args": [
                 "--date",
-                "2025-10-26",
+                "2025-11-13",
                 "--question",
                 "What homework do I have?"
             ],
+            "cwd": "${workspaceFolder}",
             "python": "${workspaceFolder}/venv/bin/python",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"

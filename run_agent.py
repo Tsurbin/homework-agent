@@ -76,7 +76,10 @@ def get_all_homework(db: HomeworkDB):
 
 async def run_single(date: str, question: str, dry_run: bool):
     db = HomeworkDB()
-    items = get_homework_for_date(db, date)
+    if date is None:
+        items = get_all_homework(db)
+    else:
+        items = get_homework_for_date(db, date)
     homework_data = homework_items_to_dict(items)
 
     print(f"Loaded {len(items)} item(s) for {date}")
@@ -119,7 +122,7 @@ async def interactive_loop(date: Optional[str], dry_run: bool):
 
 def main():
     p = argparse.ArgumentParser(description='Run the homework agent against existing DB data')
-    p.add_argument('--date', '-d', help='Date to query (YYYY-MM-DD). Defaults to today', default=datetime.now().strftime('%Y-%m-%d'))
+    p.add_argument('--date', '-d', help='Date to query (YYYY-MM-DD). Defaults to today')
     p.add_argument('--question', '-q', help='Single question to ask the agent')
     p.add_argument('--interactive', '-i', action='store_true', help='Start interactive question loop')
     p.add_argument('--dry-run', action='store_true', help='Print filtered homework instead of calling the LLM')
@@ -128,7 +131,8 @@ def main():
 
     # Basic validation of date format
     try:
-        datetime.strptime(args.date, '%Y-%m-%d')
+        if args.date:
+            datetime.strptime(args.date, '%Y-%m-%d')
     except ValueError:
         print('Invalid date format. Use YYYY-MM-DD')
         return
