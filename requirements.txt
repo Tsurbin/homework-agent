@@ -12,3 +12,6 @@ schedule==1.2.2
 ipdb==0.13.13
 debugpy==1.8.0
 anthropic==0.34.0
+
+# WhatsApp Service Dependencies
+twilio==8.10.0
