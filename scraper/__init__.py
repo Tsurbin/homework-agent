@@ -1,13 +1,11 @@
-from .runner import run_scrape_once, run_scrape_all_historical
+# Lambda-compatible scraper module
 from .db import HomeworkDB, HomeworkItem
-from .homework_parser import parse_homework_for_today
-from .historical_parser import parse_all_historical_homework
+from .dynamodb_handler import DynamoDBHandler
+from .simple_lambda_runner import SimpleLambdaRunner
 
 __all__ = [
-    'run_scrape_once',
-    'run_scrape_all_historical',
     'HomeworkDB',
     'HomeworkItem',
-    'parse_homework_for_today',
-    'parse_all_historical_homework',
+    'DynamoDBHandler',
+    'SimpleLambdaRunner'
 ]

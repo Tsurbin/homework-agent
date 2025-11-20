@@ -1,0 +1,205 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Homework Scraper Lambda Function with DynamoDB and EventBridge Scheduler",
+  "Parameters": {
+    "FunctionName": {
+      "Type": "String",
+      "Default": "homework-scraper",
+      "Description": "Name of the Lambda function"
+    },
+    "ScheduleExpression": {
+      "Type": "String",
+      "Default": "cron(0 14 ? * SUN-FRI *)",
+      "Description": "EventBridge schedule expression (e.g., 'rate(1 day)' or 'cron(0 14 ? * SUN-FRI *)')"
+    },
+    "ScraperUsername": {
+      "Type": "String",
+      "Description": "Username for the homework website",
+      "NoEcho": true
+    },
+    "ScraperPassword": {
+      "Type": "String",
+      "Description": "Password for the homework website",
+      "NoEcho": true
+    }
+  },
+  "Resources": {
+    "HomeworkTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "homework-items",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "date",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "hour_subject",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "date",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "hour_subject",
+            "KeyType": "RANGE"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "PointInTimeRecoverySpecification": {
+          "PointInTimeRecoveryEnabled": true
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": "HomeworkScraper"
+          }
+        ]
+      }
+    },
+    "LambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+        ],
+        "Policies": [
+          {
+            "PolicyName": "DynamoDBAccess",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:DescribeTable"
+                  ],
+                  "Resource": {"Fn::GetAtt": ["HomeworkTable", "Arn"]}
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "HomeworkScraperFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": {"Ref": "FunctionName"},
+        "Runtime": "python3.11",
+        "Handler": "lambda_function.lambda_handler",
+        "Role": {"Fn::GetAtt": ["LambdaExecutionRole", "Arn"]},
+        "Code": {
+          "ZipFile": "# Placeholder code - replace with actual deployment package"
+        },
+        "Timeout": 900,
+        "MemorySize": 1024,
+        "Environment": {
+          "Variables": {
+            "DYNAMODB_TABLE_NAME": {"Ref": "HomeworkTable"},
+            "HW_USERNAME": {"Ref": "ScraperUsername"},
+            "HW_PASSWORD": {"Ref": "ScraperPassword"},
+            "LOGIN_URL": "https://webtop.smartschool.co.il/account/login",
+            "USERNAME_SELECTOR": "#userName",
+            "PASSWORD_SELECTOR": "input[formcontrolname='password'][type='password']",
+            "SUBMIT_SELECTOR": "button[type=submit]",
+            "HISTORICAL_URL": "https://webtop.smartschool.co.il/Student_Card/11"
+          }
+        },
+        "Tags": [
+          {
+            "Key": "Application",
+            "Value": "HomeworkScraper"
+          }
+        ]
+      }
+    },
+    "ScheduledRule": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Description": "Trigger homework scraper daily",
+        "ScheduleExpression": {"Ref": "ScheduleExpression"},
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {"Fn::GetAtt": ["HomeworkScraperFunction", "Arn"]},
+            "Id": "HomeworkScraperTarget",
+            "Input": "{\"scrape_type\": \"daily\"}"
+          }
+        ]
+      }
+    },
+    "PermissionForEventsToInvokeLambda": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {"Ref": "HomeworkScraperFunction"},
+        "Action": "lambda:InvokeFunction",
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {"Fn::GetAtt": ["ScheduledRule", "Arn"]}
+      }
+    },
+    "HistoricalScraperRule": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Description": "Trigger historical homework scraper weekly",
+        "ScheduleExpression": "cron(0 2 ? * SUN *)",
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {"Fn::GetAtt": ["HomeworkScraperFunction", "Arn"]},
+            "Id": "HistoricalScraperTarget",
+            "Input": "{\"scrape_type\": \"historical\"}"
+          }
+        ]
+      }
+    },
+    "PermissionForHistoricalEventsToInvokeLambda": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {"Ref": "HomeworkScraperFunction"},
+        "Action": "lambda:InvokeFunction",
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {"Fn::GetAtt": ["HistoricalScraperRule", "Arn"]}
+      }
+    }
+  },
+  "Outputs": {
+    "FunctionArn": {
+      "Description": "ARN of the Lambda function",
+      "Value": {"Fn::GetAtt": ["HomeworkScraperFunction", "Arn"]}
+    },
+    "TableName": {
+      "Description": "Name of the DynamoDB table",
+      "Value": {"Ref": "HomeworkTable"}
+    },
+    "DailyScheduleArn": {
+      "Description": "ARN of the daily EventBridge rule",
+      "Value": {"Fn::GetAtt": ["ScheduledRule", "Arn"]}
+    },
+    "HistoricalScheduleArn": {
+      "Description": "ARN of the weekly historical EventBridge rule",  
+      "Value": {"Fn::GetAtt": ["HistoricalScraperRule", "Arn"]}
+    }
+  }
+}
