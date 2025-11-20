@@ -1,13 +1,38 @@
+# Python
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Environment and secrets
 .env
 .env.*
 credentials.json
 token.json
+
+# IDEs
 .idea/
 .vscode/
 !.vscode/launch.json
 .DS_Store
+
+# Project specific
 logs/               
 .db/
+build/
+lambda-package/
+*.zip
+
+# AWS deployment artifacts
+homework-scraper-lambda*.zip
+
+# Node.js (if any)
+node_modules/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
