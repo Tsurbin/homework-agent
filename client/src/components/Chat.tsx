@@ -30,7 +30,7 @@ export default function Chat() {
       const res = await fetch("http://localhost:8000/api/query", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify({ prompt: userMessage.content }),
+        body: JSON.stringify({ prompt: userMessage.content, conversation_history: messages }),
       });
 
       if (!res.ok) {

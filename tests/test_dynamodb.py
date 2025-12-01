@@ -19,7 +19,7 @@ os.environ['AWS_REGION'] = 'us-east-1'
 # os.environ['AWS_ENDPOINT_URL'] = 'http://localhost:8000'  # Uncomment for DynamoDB Local
 
 try:
-    from scraper.dynamodb_handler import DynamoDBHandler, HomeworkItem
+    from database.dynamodb_handler import DynamoDBHandler, HomeworkItem
     import boto3
     print("✅ Successfully imported DynamoDB modules")
 except ImportError as e:

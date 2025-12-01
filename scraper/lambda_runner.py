@@ -13,7 +13,7 @@ from urllib.parse import urljoin, urlparse
 # Use Lambda-specific logging
 logger = logging.getLogger(__name__)
 
-from .dynamodb_handler import DynamoDBHandler, HomeworkItem
+from database.dynamodb_handler import DynamoDBHandler, HomeworkItem
 
 # Environment variables for Lambda
 LOGIN_URL = os.environ.get('LOGIN_URL', "https://webtop.smartschool.co.il/account/login")

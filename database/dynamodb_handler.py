@@ -248,6 +248,41 @@ class DynamoDBHandler:
             logger.error(f"Error scanning all items: {e}")
             return []
     
+    
+    def get_all_items_from_date(self, start_date: str) -> List[Dict[str, Any]]:
+        """
+        Get all homework items from a specific start date onwards.
+        
+        Args:
+            start_date: Date in YYYY-MM-DD format
+        Returns:
+            List of homework items
+        """ 
+        try:
+            response = self.table.scan(
+                FilterExpression=boto3.dynamodb.conditions.Attr('date').gte(start_date)
+            )
+            
+            items = response.get('Items', [])
+            
+            # Handle pagination if needed
+            while 'LastEvaluatedKey' in response:
+                response = self.table.scan(
+                    ExclusiveStartKey=response['LastEvaluatedKey'],
+                    FilterExpression=boto3.dynamodb.conditions.Attr('date').gte(start_date)
+                )
+                items.extend(response.get('Items', []))
+            
+            # Sort by date, hour, and subject
+            items.sort(key=lambda x: (x.get('date', ''), x.get('hour', 'unknown'), x.get('subject', '')))
+            
+            logger.debug(f"Retrieved {len(items)} items from date {start_date} onwards")
+            return items
+            
+        except ClientError as e:
+            logger.error(f"Error scanning items from date {start_date}: {e}")
+            return []
+    
     def delete_item(self, date: str, hour: str, subject: str) -> bool:
         """
         Delete a specific homework item.

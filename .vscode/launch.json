@@ -211,6 +211,27 @@
             "skipFiles": [
                 "<node_internals>/**"
             ]
+        },
+        {
+            "name": "Python: Agent Server",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "agent.index",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Agent Main",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "agent.agent",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": true
         }
     ]
 }

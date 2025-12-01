@@ -1,5 +1,5 @@
 # Lambda-compatible scraper module
-from .dynamodb_handler import DynamoDBHandler, HomeworkItem
+from database.dynamodb_handler import DynamoDBHandler, HomeworkItem
 from .lambda_runner import run_scrape_lambda
 
 __all__ = [

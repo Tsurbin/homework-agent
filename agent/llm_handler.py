@@ -25,27 +25,38 @@ class LLMHandler:
         """
         return prompt
 
-    async def get_response(self, question: str, homework_data: Dict) -> str:
+    async def get_response(self, question: str, homework_data: Dict, conversation_history: List[Dict[str, str]] = None) -> str:
         """
         Get a response from the LLM for a homework-related question.
         
         Args:
             question: The user's question about homework
             homework_data: Dictionary containing current homework information
+            conversation_history: Recent conversation turns for context (optional)
             
         Returns:
             str: The LLM's response to the question
         """
         prompt = self._create_prompt(question, homework_data)
         
+        # Build messages list with conversation history
+        messages = []
+        
+        # Add conversation history if provided
+        if conversation_history:
+            messages.extend(conversation_history)
+        
+        # Add current question
+        messages.append({
+            "role": "user",
+            "content": prompt
+        })
+        
         response = self.client.messages.create(
             model="claude-sonnet-4-20250514",
             max_tokens=1024,
             system="Please respond in Hebrew.",
-            messages=[{
-                "role": "user",
-                "content": prompt
-            }]
+            messages=messages
         )
         
         return response.content[0].text

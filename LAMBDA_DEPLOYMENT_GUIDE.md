@@ -32,7 +32,7 @@ db.upsert_items(items)
 
 **Lambda (DynamoDB)**:
 ```python
-from .dynamodb_handler import DynamoDBHandler
+from database.dynamodb_handler import DynamoDBHandler
 db = DynamoDBHandler(table_name='homework-items')
 db.upsert_items(items)
 ```

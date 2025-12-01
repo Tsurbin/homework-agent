@@ -1,13 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
 
+const AGENT_URL = process.env.AGENT_URL || 'http://127.0.0.1:9000';
 
-export const queryAgent = (req: Request, res: Response, next: NextFunction) => {
-    
-    
-    const { prompt } = req.body;
-    // Here you would add the logic to interact with the agent using the prompt provided.
-    // For demonstration purposes, we'll just return a mock response.
-    const mockResponse = `Agent response to the prompt: "${prompt}"`;
+export const queryAgent = async (req: Request, res: Response, next: NextFunction) => {
+    const { prompt, conversation_history } = req.body;
 
-    res.json({ response: mockResponse });
+    try {
+        const response = await fetch(`${AGENT_URL}/query`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: prompt, conversation_history }),
+        });
+
+        if (!response.ok) {
+            next(new Error(`Agent service error: ${response.status}`));
+            return;
+        }
+
+        const data = await response.json();
+        return res.json({ response: data.response });
+    } catch (error) {
+        console.error('Error calling agent service:', error);
+        next(error);
+    }
 }
