@@ -6,14 +6,14 @@ import asyncio
 from datetime import datetime
 from .llm_handler import LLMHandler
 from .query_processor import QueryProcessor
-from scraper.db import HomeworkDB
+from scraper.dynamodb_handler import DynamoDBHandler
 
 class HomeworkAgent:
     def __init__(self):
         """Initialize the homework agent with its components."""
         self.llm = LLMHandler()
         self.query_processor = QueryProcessor()
-        self.db = HomeworkDB()
+        self.db = DynamoDBHandler()
 
     async def process_question(self, question: str) -> str:
         """
@@ -29,7 +29,7 @@ class HomeworkAgent:
         today = datetime.now().strftime('%Y-%m-%d')
         
         # Get homework data from database
-        homework_items = self.db.list_by_date(today)
+        homework_items = self.db.get_items_by_date(today)
         
         # Convert homework items to the expected format
         homework_data = {}

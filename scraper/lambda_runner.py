@@ -63,19 +63,22 @@ def run_scrape_lambda(historical: bool = False) -> int:
 def _create_session():
     """Create and configure requests session."""
     session = requests.Session()
-    session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-User': '?1',
-        'Sec-Fetch-Dest': 'document',
-        'Cache-Control': 'max-age=0'
-    })
+    # session.headers.update({
+    #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    #     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    #     'Accept-Language': 'he-IL,he;q=0.9,en-US;q=0.8,en;q=0.7',
+    #     'Accept-Encoding': 'gzip, deflate, br',
+    #     'Connection': 'keep-alive',
+    #     'Upgrade-Insecure-Requests': '1',
+    #     'Sec-Fetch-Site': 'none',
+    #     'Sec-Fetch-Mode': 'navigate',
+    #     'Sec-Fetch-User': '?1',
+    #     'Sec-Fetch-Dest': 'document',
+    #     'Cache-Control': 'max-age=0'
+    # })
+    
+    session.cookies.set("cookie_consent", "true", domain="https://webtop.smartschool.co.il")
+    session.cookies.set("allowCookies", "1", domain="https://webtop.smartschool.co.il")
     
     # Add custom attribute to track current URL
     session.current_url = None
@@ -92,16 +95,16 @@ def _create_session():
     # Pre-set the essential cookie that we discovered manually
     # This is the cookie that gets set when clicking "אשר cookies" 
     # Only set for the main domain to avoid conflicts
-    session.cookies.set(
-        name='allowCookies',
-        value='1',
-        domain='webtop.smartschool.co.il',
-        path='/',
-        secure=True
-    )
+    # session.cookies.set(
+    #     name='allowCookies',
+    #     value='1',
+    #     domain='webtop.smartschool.co.il',
+    #     path='/',
+    #     secure=True
+    # )
     
     # Pre-set some common session cookies that might be expected
-    session.cookies.set('sessionInitialized', 'true')
+    # session.cookies.set('sessionInitialized', 'true')
     
     return session
 
@@ -117,30 +120,61 @@ def _login(session, username, password):
     logger.info("Starting simplified cookie-based login process...")
     
     # Step 1: Get initial login page 
-    login_response = session.get(LOGIN_URL, timeout=30)
+    # login_response = session.get(LOGIN_URL, timeout=30)
+    # login_response.raise_for_status()
+    # logger.info(f"Got initial login page: {login_response.url}")
+    
+    # url = "https://lgn.edu.gov.il/nidp/wsfed/ep?id=EduCombinedAuthUidPwd&sid=0&option=credential&sid=0"
+    init_url = "https://webtopserver.smartschool.co.il/server/api/user/init"
+    session.get(init_url, headers={"User-Agent": "Mozilla"}, timeout=30)
+    xsrf = session.cookies.get("XSRF-TOKEN")
+    
+    url = "https://webtopserver.smartschool.co.il/server/api/user/LoginMoe"
+    headers = {
+        "Content-Type": "application/json",
+        "Origin": "https://webtop.smartschool.co.il",
+        "Referer": "https://webtop.smartschool.co.il/",
+        "Accept": "application/json, text/plain, */*",
+        "x-xsrf-token": xsrf,
+        "User-Agent": "Mozilla/5.0",
+    }
+    
+    payload = {
+        "username": username,
+        "password": password,
+        "rememberme": 0,
+        "language": "he"
+    }
+    
+    login_response = session.post(url, headers=headers, json=payload, timeout=30)
     login_response.raise_for_status()
     logger.info(f"Got initial login page: {login_response.url}")
+    logger.info(f"Got initial login page: {login_response.content}")
+    logger.info(f"Got initial login page: {login_response.text}")
+    logger.info(f"Got initial login page: {login_response.text}")
+    
+    
     
     # Step 2: Set cookie consent cookie (discovered manually)
     # This is equivalent to clicking "אשר cookies" button in auth.py
-    session.cookies.set(
-        name='allowCookies',
-        value='1',
-        domain='webtop.smartschool.co.il',
-        path='/',
-        secure=True
-    )
+    # session.cookies.set(
+    #     name='allowCookies',
+    #     value='1',
+    #     domain='webtop.smartschool.co.il',
+    #     path='/',
+    #     secure=True
+    # )
     logger.info("✅ Set cookie consent: allowCookies=1")
     
     # Step 3: Set education ministry login choice cookie
     # This is equivalent to clicking "הזדהות משרד החינוך" button in auth.py
-    session.cookies.set(
-        name='loginMethod',
-        value='education-ministry',
-        domain='webtop.smartschool.co.il',
-        path='/',
-        secure=True
-    )
+    # session.cookies.set(
+    #     name='loginMethod',
+    #     value='education-ministry',
+    #     domain='webtop.smartschool.co.il',
+    #     path='/',
+    #     secure=True
+    # )
     logger.info("✅ Set education ministry login method")
     
     # Step 4: Set authentication cookies to simulate successful login
@@ -149,25 +183,25 @@ def _login(session, username, password):
     import hashlib
     session_token = hashlib.md5(f"{username}:{password}".encode()).hexdigest()
     
-    auth_cookies = [
-        ('username', username),
-        ('authenticated', 'true'),
-        ('sessionActive', '1'),
-        ('sessionToken', session_token),
-        ('loginComplete', 'true'),
-        ('userLoggedIn', '1')
-    ]
+    # auth_cookies = [
+    #     ('username', username),
+    #     ('authenticated', 'true'),
+    #     ('sessionActive', '1'),
+    #     ('sessionToken', session_token),
+    #     ('loginComplete', 'true'),
+    #     ('userLoggedIn', '1')
+    # ]
     
-    for cookie_name, cookie_value in auth_cookies:
-        session.cookies.set(
-            name=cookie_name,
-            value=str(cookie_value),
-            domain='webtop.smartschool.co.il',
-            path='/',
-            secure=True
-        )
+    # for cookie_name, cookie_value in auth_cookies:
+    #     session.cookies.set(
+    #         name=cookie_name,
+    #         value=str(cookie_value),
+    #         domain='webtop.smartschool.co.il',
+    #         path='/',
+    #         secure=True
+    #     )
     
-    logger.info("✅ Set authentication cookies")
+    # logger.info("✅ Set authentication cookies")
     
     # Step 5: Test access to homework page to verify login worked
     try:
@@ -321,6 +355,7 @@ def _scrape_historical_data(session, db: DynamoDBHandler) -> int:
     except ValueError as e:
         logger.error(f"Error parsing historical JSON response: {e}")
         return 0
+    
 def _parse_homework_from_json(json_response, historical=False):
     """Parse homework items from JSON API response."""
     homework_items = []

@@ -16,3 +16,4 @@ anthropic==0.34.0
 
 # WhatsApp Service Dependencies
 twilio==8.10.0
+brotli>=1.1.0

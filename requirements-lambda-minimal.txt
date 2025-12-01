@@ -3,3 +3,4 @@ botocore
 requests
 beautifulsoup4
 lxml
+brotli>=1.1.0

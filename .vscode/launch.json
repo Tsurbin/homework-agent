@@ -2,10 +2,26 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "run Lambda function",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/lambda_function.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "AWS_LAMBDA_FUNCTION_NAME": "homework-scraper",
+                "DYNAMODB_TABLE_NAME": "homework-items",
+                "AWS_REGION": "us-east-1"
+            },
+            "args": []
+        },
+        {
             "name": "Debug Lambda Simulation",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/test_all.py",
+            "program": "${workspaceFolder}/tests/test_all.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "env": {
@@ -128,6 +144,73 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
+        },
+        {
+            "name": "Debug Playwright Scraper - Daily",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/playwright-scraper/src/index.js",
+            "cwd": "${workspaceFolder}/playwright-scraper",
+            "console": "integratedTerminal",
+            "env": {
+                "NODE_ENV": "development",
+                "PLAYWRIGHT_HEADLESS": "false"
+            },
+            "envFile": "${workspaceFolder}/playwright-scraper/.env",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "args": []
+        },
+        {
+            "name": "Debug Playwright Scraper - Historical",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node-scraper/src/index.js",
+            "cwd": "${workspaceFolder}/node-scraper",
+            "console": "integratedTerminal",
+            "env": {
+                "NODE_ENV": "development",
+                "PLAYWRIGHT_HEADLESS": "false"
+            },
+            "envFile": "${workspaceFolder}/node-scraper/.env",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "args": ["--historical"]
+        },
+        {
+            "name": "Debug Playwright Scraper - No DynamoDB",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node-scraper/src/index.js",
+            "cwd": "${workspaceFolder}/node-scraper",
+            "console": "integratedTerminal",
+            "env": {
+                "NODE_ENV": "development",
+                "PLAYWRIGHT_HEADLESS": "false"
+            },
+            "envFile": "${workspaceFolder}/node-scraper/.env",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "args": ["--no-dynamodb"]
+        },
+        {
+            "name": "Debug Playwright Auth Only",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node-scraper/src/scraper/auth.js",
+            "cwd": "${workspaceFolder}/node-scraper",
+            "console": "integratedTerminal",
+            "env": {
+                "NODE_ENV": "development",
+                "PLAYWRIGHT_HEADLESS": "false"
+            },
+            "envFile": "${workspaceFolder}/node-scraper/.env",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         }
     ]
 }

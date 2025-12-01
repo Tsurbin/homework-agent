@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  homework-scraper:
+    build: .
+    environment:
+      # Login credentials
+      - HW_USERNAME=${HW_USERNAME}
+      - HW_PASSWORD=${HW_PASSWORD}
+      
+      # URLs
+      - LOGIN_URL=${LOGIN_URL:-https://webtop.smartschool.co.il/account/login}
+      - HOMEWORK_URL=${HOMEWORK_URL:-https://webtop.smartschool.co.il/Student_Card/11}
+      
+      # AWS/DynamoDB settings
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - DYNAMODB_TABLE_NAME=${DYNAMODB_TABLE_NAME:-homework-items}
+      
+      # Playwright settings
+      - PLAYWRIGHT_HEADLESS=true
+      - NODE_ENV=production
+    
+    volumes:
+      # Mount source code for development (comment out for production)
+      - ./src:/app/src:ro
+    
+    # For development - keep container running
+    # command: tail -f /dev/null
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+
+  # Optional: LocalStack for local DynamoDB development
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb
+      - DEBUG=1
+      - PERSISTENCE=1
+    volumes:
+      - ./localstack-data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    profiles:
+      - development

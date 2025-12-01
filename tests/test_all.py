@@ -11,43 +11,44 @@ from pathlib import Path
 from datetime import date, datetime
 
 # Add project root to path
-project_root = Path(__file__).parent
+project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 def test_local_scraper():
-    """Test the local scraper with SQLite database."""
+    """Test the Lambda scraper modules (local testing)."""
     print("=" * 60)
-    print("🧪 TESTING LOCAL SCRAPER (SQLite)")
+    print("🧪 TESTING LAMBDA SCRAPER MODULES")
     print("=" * 60)
     
     try:
-        from scraper.runner import run_scrape_once
-        from scraper.db import HomeworkDB
+        from scraper.lambda_runner import run_scrape_lambda
+        from scraper.dynamodb_handler import DynamoDBHandler, HomeworkItem
         
-        print("✅ Successfully imported local scraper modules")
+        print("✅ Successfully imported Lambda scraper modules")
         
-        # Test database connection
-        print("\n📊 Testing database connection...")
-        db = HomeworkDB()
-        existing_items = db.list()
-        print(f"✅ Database connected. Found {len(existing_items)} existing items")
+        # Test HomeworkItem creation
+        print("\n� Testing HomeworkItem creation...")
+        test_item = HomeworkItem(
+            date="2025-11-20",
+            subject="מתמטיקה",
+            description="תרגילים 1-10",
+            hour="שיעור 1"
+        )
+        print(f"✅ Created test item: {test_item.subject}")
         
-        # Test scraping (dry run - just test login)
-        print("\n🔍 Testing scraper (this will attempt to log in)...")
-        print("⚠️  Make sure your credentials are set in .env file")
+        # Test DynamoDB handler initialization (without AWS calls)
+        print("\n� Testing DynamoDB handler initialization...")
+        db = DynamoDBHandler(table_name="test-homework-items")
+        print("✅ DynamoDB handler initialized successfully")
         
-        # You can uncomment this to actually run the scraper
-        # result = run_scrape_once()
-        # print(f"✅ Scraper completed. Inserted {result} items")
-        
-        print("✅ Local scraper test completed")
+        print("✅ Lambda scraper modules test completed")
         return True
         
     except ImportError as e:
         print(f"❌ Import error: {e}")
         return False
     except Exception as e:
-        print(f"❌ Error testing local scraper: {e}")
+        print(f"❌ Error testing Lambda scraper modules: {e}")
         return False
 
 def test_lambda_modules():
@@ -60,7 +61,7 @@ def test_lambda_modules():
         # Test DynamoDB handler import
         print("📦 Testing DynamoDB handler import...")
         try:
-            from scraper.dynamodb_handler import DynamoDBHandler, HomeworkItem
+            from scraper.dynamodb_handler import DynamoDBHandler
             print("✅ DynamoDB handler imported successfully")
         except ImportError as e:
             print(f"❌ DynamoDB handler import failed: {e}")
@@ -69,7 +70,7 @@ def test_lambda_modules():
         
         # Test Lambda runner import
         print("📦 Testing Lambda runner import...")
-        from scraper.lambda_runner_fixed import run_scrape_lambda
+        from scraper.lambda_runner import run_scrape_lambda
         print("✅ Lambda runner imported successfully")
         
         # Test Lambda function import
@@ -79,6 +80,7 @@ def test_lambda_modules():
         
         # Test HomeworkItem creation
         print("📝 Testing HomeworkItem creation...")
+        from scraper.dynamodb_handler import HomeworkItem
         item = HomeworkItem(
             date=date.today().isoformat(),
             subject="Test Subject",
@@ -102,12 +104,12 @@ def test_deployment_package():
     
     try:
         # Check if deploy script exists
-        deploy_script = project_root / "deploy.sh"
+        deploy_script = project_root / "deploy-lambda-runner.sh"
         if not deploy_script.exists():
-            print("❌ deploy.sh not found")
+            print("❌ deploy-lambda-runner.sh not found")
             return False
         
-        print("✅ deploy.sh found")
+        print("✅ deploy-lambda-runner.sh found")
         
         # Check if requirements file exists
         requirements_file = project_root / "requirements-lambda-minimal.txt"
@@ -115,7 +117,7 @@ def test_deployment_package():
             print("❌ requirements-lambda-minimal.txt not found")
             return False
         
-        print("✅ requirements-lambda.txt found")
+        print("✅ requirements-lambda-minimal.txt found")
         
         # Check CloudFormation template
         cf_template = project_root / "cloudformation-template.json"
@@ -256,7 +258,7 @@ def main():
     print(f"📅 Running on: {datetime.now().isoformat()}")
     
     tests = [
-        ("Local Scraper", test_local_scraper),
+        ("Lambda Scraper Modules", test_local_scraper),
         ("Lambda Modules", test_lambda_modules),
         ("Deployment Package", test_deployment_package),
         ("AWS Configuration", test_aws_configuration),

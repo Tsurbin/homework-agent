@@ -25,10 +25,6 @@ echo -e "${YELLOW}Copying essential code...${NC}"
 cp lambda_function.py lambda-package/
 cp -r scraper/ lambda-package/
 
-# Remove unnecessary files from scraper
-rm -f lambda-package/scraper/runner.py 2>/dev/null || true
-rm -f lambda-package/scraper/runner_debug.py 2>/dev/null || true
-
 # Install minimal dependencies with timeout
 echo -e "${YELLOW}Installing minimal dependencies...${NC}"
 timeout 300 pip install -r requirements-lambda-minimal.txt -t lambda-package/ --upgrade --quiet

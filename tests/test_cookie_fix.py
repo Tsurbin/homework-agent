@@ -44,7 +44,7 @@ def test_cookie_fixed_login():
     print(f"✅ Using credentials for: {username[:3]}***")
     
     try:
-        from scraper.lambda_runner_fixed import _create_session, _login
+        from scraper.lambda_runner import _create_session, _login
         
         # Test session creation with our cookie
         print("🔧 Creating session with allowCookies=1...")
@@ -102,7 +102,7 @@ def test_simple_request():
     print("\n🌐 Testing simple request to login page with allowCookies=1...")
     
     try:
-        from scraper.lambda_runner_fixed import _create_session
+        from scraper.lambda_runner import _create_session
         import requests
         from bs4 import BeautifulSoup
         

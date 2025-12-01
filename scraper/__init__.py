@@ -1,11 +1,9 @@
 # Lambda-compatible scraper module
-from .db import HomeworkDB, HomeworkItem
-from .dynamodb_handler import DynamoDBHandler
-from .simple_lambda_runner import SimpleLambdaRunner
+from .dynamodb_handler import DynamoDBHandler, HomeworkItem
+from .lambda_runner import run_scrape_lambda
 
 __all__ = [
-    'HomeworkDB',
-    'HomeworkItem',
+    'HomeworkItem', 
     'DynamoDBHandler',
-    'SimpleLambdaRunner'
+    'run_scrape_lambda'
 ]

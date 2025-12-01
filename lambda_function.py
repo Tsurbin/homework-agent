@@ -13,7 +13,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # Import your scraper modules
-from scraper.lambda_runner_fixed import run_scrape_lambda
+from scraper.lambda_runner import run_scrape_lambda
 
 def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
     """
@@ -77,6 +77,6 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
 # For testing locally
 if __name__ == "__main__":
     # Test the lambda function locally
-    test_event = {'scrape_type': 'daily'}
+    test_event = {'scrape_type': 'historical'}
     result = lambda_handler(test_event, None)
     print(json.dumps(result, indent=2))

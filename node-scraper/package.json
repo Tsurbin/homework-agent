@@ -1,0 +1,32 @@
+{
+  "name": "playwright-homework-scraper",
+  "version": "1.0.0",
+  "description": "A Playwright-based scraper for retrieving homework data with DynamoDB storage.",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "start:historical": "node src/index.js --historical",
+    "start:no-db": "node src/index.js --no-dynamodb",
+    "test": "jest",
+    "build": "docker build -t homework-scraper .",
+    "build:lambda": "docker build -f Dockerfile.lambda -t homework-scraper-lambda .",
+    "docker:run": "docker run --env-file .env homework-scraper",
+    "lambda:test": "node lambda-handler.js"
+  },
+  "dependencies": {
+    "@sparticuz/chromium": "^141.0.0",
+    "aws-sdk": "^2.1500.0",
+    "axios": "^1.6.0",
+    "playwright": "^1.56.0",
+    "playwright-core": "^1.56.1"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
