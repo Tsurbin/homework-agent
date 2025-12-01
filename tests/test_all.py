@@ -22,7 +22,7 @@ def test_local_scraper():
     
     try:
         from scraper.lambda_runner import run_scrape_lambda
-        from scraper.dynamodb_handler import DynamoDBHandler, HomeworkItem
+        from database.dynamodb_handler import DynamoDBHandler, HomeworkItem
         
         print("✅ Successfully imported Lambda scraper modules")
         
@@ -61,7 +61,7 @@ def test_lambda_modules():
         # Test DynamoDB handler import
         print("📦 Testing DynamoDB handler import...")
         try:
-            from scraper.dynamodb_handler import DynamoDBHandler
+            from database.dynamodb_handler import DynamoDBHandler
             print("✅ DynamoDB handler imported successfully")
         except ImportError as e:
             print(f"❌ DynamoDB handler import failed: {e}")
@@ -80,7 +80,7 @@ def test_lambda_modules():
         
         # Test HomeworkItem creation
         print("📝 Testing HomeworkItem creation...")
-        from scraper.dynamodb_handler import HomeworkItem
+        from database.dynamodb_handler import HomeworkItem
         item = HomeworkItem(
             date=date.today().isoformat(),
             subject="Test Subject",

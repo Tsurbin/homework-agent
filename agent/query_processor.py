@@ -16,17 +16,22 @@ class QueryProcessor:
             'all': r'all|everything|full|list',
         }
 
-    def analyze_query(self, query: str) -> Dict[str, bool]:
+    def analyze_query(self, query: str, conversation_history: List[Dict[str, str]] = None) -> Dict[str, bool]:
         """
         Analyze the user's query to understand what they're asking about.
         
         Args:
             query: The user's question about homework
+            conversation_history: Recent conversation turns for context (optional)
             
         Returns:
             Dict of identified query aspects
         """
         query = query.lower()
+        
+        # TODO: Use conversation_history to resolve references like "it", "that", "tomorrow"
+        # For now, we'll just analyze the current query
+        
         analysis = {
             'is_about_today': bool(re.search(self.query_patterns['today'], query)),
             'is_about_tomorrow': bool(re.search(self.query_patterns['tomorrow'], query)),
