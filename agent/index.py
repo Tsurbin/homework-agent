@@ -9,6 +9,11 @@ load_dotenv()
 app = FastAPI()
 agent = HomeworkAgent()
 
+@app.get("/health")
+async def health():
+    """Health check endpoint for AWS load balancer"""
+    return {"status": "healthy", "service": "python-agent"}
+
 @app.post("/query")
 async def query(request: dict):
     question = request.get("question", "")
@@ -22,4 +27,5 @@ async def query(request: dict):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 9000))
-    uvicorn.run(app, host="127.0.0.1", port=port)  # Local only
+    host = os.getenv("HOST", "0.0.0.0")  # 0.0.0.0 for Docker/AWS, 127.0.0.1 for local
+    uvicorn.run(app, host=host, port=port)

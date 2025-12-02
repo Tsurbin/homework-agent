@@ -7,9 +7,20 @@ import cors from 'cors';
 const app = express();
 app.use(express.json());
 
+// Configure CORS for both local and production environments
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',') 
+    : ['http://localhost:5173'];
+
 app.use(cors({
-    origin: 'http://localhost:5173',
-}))
+    origin: allowedOrigins,
+    credentials: true,
+}));
+
+// Health check endpoint for AWS load balancer
+app.get('/health', (req, res) => {
+    res.json({ status: 'healthy', service: 'node-server' });
+});
 
 app.use('/api/query', queries)
 

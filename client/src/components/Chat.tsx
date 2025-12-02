@@ -27,7 +27,8 @@ export default function Chat() {
     setIsSending(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/query", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const res = await fetch(`${apiUrl}/api/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
         body: JSON.stringify({ prompt: userMessage.content, conversation_history: messages }),
