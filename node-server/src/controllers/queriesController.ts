@@ -1,26 +1,47 @@
 import { Request, Response, NextFunction } from 'express';
+import { HomeworkAgent } from '../agent/index.js';
+import logger from '../utils/logger.js';
+import { getConversationService } from '../services/conversationService.js';
 
-const AGENT_URL = process.env.AGENT_URL || 'http://127.0.0.1:9000';
 
 export const queryAgent = async (req: Request, res: Response, next: NextFunction) => {
-    const { prompt, conversation_history } = req.body;
+    const { prompt, conversation_history: conversationHistory } = req.body;
 
     try {
-        const response = await fetch(`${AGENT_URL}/query`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ question: prompt, conversation_history }),
+        logger.info('Received query', { 
+            messageLength: prompt.length,
+            historyLength: conversationHistory.length 
         });
+        
+        // Get the service instance
+        const conversationService = await getConversationService();
+        const result = await conversationService.handleQuery(prompt, conversationHistory);
 
-        if (!response.ok) {
-            next(new Error(`Agent service error: ${response.status}`));
-            return;
-        }
-
-        const data = await response.json();
-        return res.json({ response: data.response });
+        res.json({
+            success: true,
+            response: result.response,
+            conversationHistory: result.conversationHistory
+        });
+        return;
     } catch (error) {
-        console.error('Error calling agent service:', error);
+        console.error('Error processing query:', error);
         next(error);
     }
 }
+
+
+// export const queryAgent = async (req: Request, res: Response, next: NextFunction) => {
+//     const { prompt, conversation_history: conversationHistory } = req.body;
+
+//     try {
+//         logger.info('Received query', { 
+//             messageLength: prompt.length,
+//             historyLength: conversationHistory.length 
+//         });
+//         const response = await agent.handleConversation(prompt, conversationHistory);
+//         return res.json({ response });
+//     } catch (error) {
+//         console.error('Error processing query:', error);
+//         next(error);
+//     }
+// }

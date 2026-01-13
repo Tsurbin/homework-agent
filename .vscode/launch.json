@@ -19,6 +19,30 @@
             "args": ["--historical"]
         },
         {
+            "name": "Debug Node Server And Agent",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "dev"],
+            "cwd": "${workspaceFolder}/node-server",
+            "console": "integratedTerminal",
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "envFile": "${workspaceFolder}/node-server/.env",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "internalConsoleOptions": "neverOpen",
+            "restart": true,
+            "serverReadyAction": {
+                "pattern": "Server is running on port ([0-9]+)",
+                "uriFormat": "http://localhost:%s",
+                "action": "debugWithChrome"
+            }
+        },
+
+        {
             "name": "Debug Homework Agent",
             "type": "python",
             "request": "launch",

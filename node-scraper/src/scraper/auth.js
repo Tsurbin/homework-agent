@@ -1,15 +1,15 @@
-// import { chromium } from 'playwright';
+import { chromium } from 'playwright';
 import config from '../config/config.js';
-
-import chromium from '@sparticuz/chromium';
-import playwright from 'playwright-core';
 
 export async function loginAndGetWebToken() {
 
-    const browser = await playwright.chromium.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
+    // Use regular Playwright for local development
+    // Set headless based on environment variable, default to true to save memory
+    const isHeadless = process.env.PLAYWRIGHT_HEADLESS !== 'false';
+    console.log(`Launching browser in ${isHeadless ? 'headless' : 'visible'} mode`);
+    
+    const browser = await chromium.launch({
+        headless: isHeadless,
     });
 
 
@@ -22,8 +22,8 @@ export async function loginAndGetWebToken() {
     try {
         console.log('Navigating to login page...');
         const response = await page.goto(config.LOGIN_URL, { 
-            waitUntil: "networkidle", 
-            timeout: 30000 
+            waitUntil: "domcontentloaded", // Less strict than networkidle for slow connections
+            timeout: 60000 // Increased timeout for slow internet
         });
         
         if (!response) {
@@ -32,30 +32,59 @@ export async function loginAndGetWebToken() {
 
        
         // Handle cookie consent if present
-        await page.waitForLoadState("networkidle");
-        await page.waitForLoadState("networkidle");
-        const cookieSelector = "button:has-text('אשר cookies')";
-        const cookieButton = page.locator(cookieSelector);
-        if (await cookieButton.count() > 0) {
-            console.log('Clicking cookie consent...');
-            await cookieButton.click();
-            await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(3000); // Give page time to settle with slow connection
+        await page.waitForLoadState("domcontentloaded");
+        
+        // Try multiple selectors for the cookie button
+        const cookieSelectors = [
+            'button:has-text("אשר cookies")',
+            'button.filled:has-text("אשר")',
+            'button[aria-label="אשר cookies"]'
+        ];
+        
+        let cookieClicked = false;
+        for (const selector of cookieSelectors) {
+            const cookieButton = page.locator(selector);
+            if (await cookieButton.count() > 0) {
+                console.log(`Clicking cookie consent with selector: ${selector}`);
+                await cookieButton.click();
+                await page.waitForTimeout(2000); // Wait for animation/transition
+                cookieClicked = true;
+                break;
+            }
+        }
+        
+        if (!cookieClicked) {
+            console.log('Cookie consent button not found, continuing...');
         }
 
         // Handle education ministry login button
-        const loginPageSelector = "button:has-text('הזדהות משרד החינוך')";
+        const loginPageSelectors = [
+            'button:has-text("הזדהות משרד החינוך")',
+            'button.outline:has-text("הזדהות")',
+            'button[aria-label="הזדהות משרד החינוך"]'
+        ];
         
-        // Wait for the button to exist first
-        try {
-            await page.waitForLoadState("networkidle");
-            await page.waitForSelector(loginPageSelector, { timeout: 10000 });
-            console.log('Education ministry button found');
-        } catch (error) {
-            console.log('Education ministry button not found, continuing...');
+        let loginButton = null;
+        for (const selector of loginPageSelectors) {
+            try {
+                await page.waitForTimeout(1000); // Brief pause for slow connections
+                await page.waitForSelector(selector, { timeout: 10000 }); // Increased timeout
+                const button = page.locator(selector);
+                if (await button.count() > 0) {
+                    console.log(`Education ministry button found with selector: ${selector}`);
+                    loginButton = button;
+                    break;
+                }
+            } catch (error) {
+                console.log(`Selector ${selector} not found, trying next...`);
+            }
         }
         
-        const loginButton = page.locator(loginPageSelector);
-        if (await loginButton.count() > 0) {
+        if (!loginButton) {
+            console.log('Education ministry button not found with any selector, continuing...');
+        }
+        if (loginButton && await loginButton.count() > 0) {
             // Wait for button to be enabled (retry mechanism)
             let retryCount = 0;
             const maxRetries = 10;
@@ -63,14 +92,32 @@ export async function loginAndGetWebToken() {
             while (retryCount < maxRetries) {
                 const isDisabled = await loginButton.getAttribute("disabled");
                 
-                if (isDisabled === "true" || isDisabled === "") {
+                // Check if button is disabled (can be "true", "", or the attribute exists)
+                // If getAttribute returns null, the button is enabled
+                if (isDisabled !== null && isDisabled !== "false") {
                     console.log(`Login button is disabled, waiting... (attempt ${retryCount + 1}/${maxRetries})`);
                     await page.waitForTimeout(2000); // Wait 2 seconds
                     retryCount++;
                 } else {
                     console.log("The login button is enabled. Clicking...");
-                    await loginButton.click();
-                    await page.waitForLoadState("networkidle");
+                    try {
+                        // Try to click the button with force option and wait for navigation
+                        await loginButton.click({ force: true });
+                        console.log('Button clicked, waiting for navigation...');
+                        await page.waitForTimeout(3000); // Give time for navigation with slow connection
+                    } catch (clickError) {
+                        console.log('Regular click failed, trying JavaScript click...');
+                        // Fallback: use JavaScript click
+                        await page.evaluate(() => {
+                            const btn = document.querySelector('button[aria-label*="הזדהות"]') || 
+                                       document.querySelector('button.outline');
+                            if (btn) {
+                                btn.click();
+                                console.log('JavaScript click executed');
+                            }
+                        });
+                        await page.waitForTimeout(3000); // Give time for navigation with slow connection
+                    }
                     break;
                 }
             }
@@ -83,8 +130,8 @@ export async function loginAndGetWebToken() {
         }
         // Wait for username field and fill it
         console.log('Filling username...');
-        await page.waitForLoadState("networkidle");
-        await page.waitForSelector(config.USERNAME_SELECTOR, { timeout: 15000 });
+        await page.waitForTimeout(2000); // Give page time to settle
+        await page.waitForSelector(config.USERNAME_SELECTOR, { timeout: 20000 }); // Increased timeout
         await page.fill(config.USERNAME_SELECTOR, config.HW_USERNAME);
 
         // Handle password field with various fallback methods
@@ -128,46 +175,17 @@ export async function loginAndGetWebToken() {
         // Submit the form
         console.log('Submitting login form...');
         await page.click(config.SUBMIT_SELECTOR);
-        await page.waitForLoadState("networkidle");
+        console.log('Form submitted, waiting for login to complete...');
+        await page.waitForTimeout(5000); // Increased wait for slow connection + login processing
+        await navigateToHomeworkPage(page);
 
-        // Wait a bit for cookies to be set
-        await page.waitForTimeout(2000);
-
-        // Retrieve the webToken from cookies
-        console.log('Extracting webToken from cookies...');
-        const cookies = await context.cookies();
-        const webTokenCookie = cookies.find(cookie => cookie.name === 'webToken');
-        const sessionStorageData = await page.evaluate(() => {
-            const data = {};
-            for (let i = 0; i < sessionStorage.length; i++) {
-                const key = sessionStorage.key(i);
-                data[key] = sessionStorage.getItem(key);
-            }
-            return data;
-        });
-
-        if (webTokenCookie) {
-            console.log('Successfully retrieved webToken');
-            
-            // Navigate to homework page through UI
-            console.log('Navigating to homework page...');
-            await navigateToHomeworkPage(page);
-            
-            return {
-                webToken: webTokenCookie.value,
-                cookies: cookies, // Return all cookies in case other tokens are needed
-                sessionStorage: sessionStorageData,
-                page: page, // Return the page for further scraping
-                context: context, // Return context to keep session alive
-                browser: browser // Return browser to keep it open
-            };
-        } else {
-            console.log('Available cookies:', cookies.map(c => c.name).join(', '));
-            throw new Error('webToken cookie not found after login');
-        }
-
+        return {
+            page: page, // Return the page for further scraping
+            context: context, // Return context to keep session alive
+            browser: browser // Return browser to keep it open
+        };
     } catch (error) {
-        console.error('Login failed:', error);
+        console.error('Login or navigate to homework page failed:', error);
         if (browser) {
             await browser.close();
         }
