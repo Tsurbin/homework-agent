@@ -1,5 +1,9 @@
 // Configuration settings for the Playwright scraper application
 
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config();
+
 const config = {
     LOGIN_URL: process.env.LOGIN_URL || "https://webtop.smartschool.co.il/account/login",
     HOMEWORK_URL: process.env.HOMEWORK_URL || "https://webtop.smartschool.co.il/Student_Card/11",

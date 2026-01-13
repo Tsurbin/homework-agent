@@ -8,7 +8,7 @@ export async function fetchHomeworkData(historical = false) {
         // Login and navigate to homework page using UI
         console.log('Starting login and navigation process...');
         const authData = await loginAndGetWebToken();
-        const { webToken, cookies, sessionStorage, page, context, browser } = authData;
+        const { page, context, browser } = authData;
         console.log(`✅ Retrieved webToken and navigated to homework page`);
 
         try {

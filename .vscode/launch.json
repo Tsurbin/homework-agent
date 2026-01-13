@@ -2,63 +2,52 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "run Lambda function",
-            "type": "python",
+            "name": "Debug Node Scraper - Historical",
+            "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/lambda_function.py",
+            "program": "${workspaceFolder}/node-scraper/src/index.js",
+            "cwd": "${workspaceFolder}/node-scraper",
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "python": "${workspaceFolder}/venv/bin/python",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}",
-                "AWS_LAMBDA_FUNCTION_NAME": "homework-scraper",
-                "DYNAMODB_TABLE_NAME": "homework-items",
-                "AWS_REGION": "us-east-1"
+                "NODE_ENV": "development",
+                "PLAYWRIGHT_HEADLESS": "false"
             },
-            "args": []
+            "envFile": "${workspaceFolder}/node-scraper/.env",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "args": ["--historical"]
         },
         {
-            "name": "Debug Lambda Simulation",
-            "type": "python",
+            "name": "Debug Node Server And Agent",
+            "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/tests/test_all.py",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "dev"],
+            "cwd": "${workspaceFolder}/node-server",
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
             "env": {
-                "PYTHONPATH": "${workspaceFolder}"
+                "NODE_ENV": "development"
             },
-            "args": []
+            "envFile": "${workspaceFolder}/node-server/.env",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "internalConsoleOptions": "neverOpen",
+            "restart": true,
+            "serverReadyAction": {
+                "pattern": "Server is running on port ([0-9]+)",
+                "uriFormat": "http://localhost:%s",
+                "action": "debugWithChrome"
+            }
         },
+
         {
             "name": "Debug Homework Agent",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
             "args": ["--scrape"],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "python": "${workspaceFolder}/venv/bin/python",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "Debug Scheduler",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/scheduler.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "python": "${workspaceFolder}/venv/bin/python",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "Debug Scraper Module",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/scraper/runner.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "python": "${workspaceFolder}/venv/bin/python",
@@ -131,86 +120,6 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
-        },
-        {
-            "name": "Debug Scrape All Historical",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/main.py",
-            "args": ["--scrape-all"],
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "python": "${workspaceFolder}/venv/bin/python",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "Debug Playwright Scraper - Daily",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/playwright-scraper/src/index.js",
-            "cwd": "${workspaceFolder}/playwright-scraper",
-            "console": "integratedTerminal",
-            "env": {
-                "NODE_ENV": "development",
-                "PLAYWRIGHT_HEADLESS": "false"
-            },
-            "envFile": "${workspaceFolder}/playwright-scraper/.env",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "args": []
-        },
-        {
-            "name": "Debug Playwright Scraper - Historical",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node-scraper/src/index.js",
-            "cwd": "${workspaceFolder}/node-scraper",
-            "console": "integratedTerminal",
-            "env": {
-                "NODE_ENV": "development",
-                "PLAYWRIGHT_HEADLESS": "false"
-            },
-            "envFile": "${workspaceFolder}/node-scraper/.env",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "args": ["--historical"]
-        },
-        {
-            "name": "Debug Playwright Scraper - No DynamoDB",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node-scraper/src/index.js",
-            "cwd": "${workspaceFolder}/node-scraper",
-            "console": "integratedTerminal",
-            "env": {
-                "NODE_ENV": "development",
-                "PLAYWRIGHT_HEADLESS": "false"
-            },
-            "envFile": "${workspaceFolder}/node-scraper/.env",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "args": ["--no-dynamodb"]
-        },
-        {
-            "name": "Debug Playwright Auth Only",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/node-scraper/src/scraper/auth.js",
-            "cwd": "${workspaceFolder}/node-scraper",
-            "console": "integratedTerminal",
-            "env": {
-                "NODE_ENV": "development",
-                "PLAYWRIGHT_HEADLESS": "false"
-            },
-            "envFile": "${workspaceFolder}/node-scraper/.env",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
         },
         {
             "name": "Python: Agent Server",

@@ -1,3 +1,7 @@
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { fetchHomeworkData } from './scraper/homework.js';
 import { DynamoDBHandler } from './scraper/dynamodb.js';
 import config from './config/config.js';

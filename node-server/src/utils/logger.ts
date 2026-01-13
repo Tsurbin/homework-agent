@@ -3,7 +3,12 @@ import DailyRotateFile from 'winston-daily-rotate-file';
 
 // Create logs directory if it doesn't exist
 import { existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// ESM equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const logsDir = join(__dirname, '../../logs');
 if (!existsSync(logsDir)) {

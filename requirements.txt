@@ -14,6 +14,9 @@ ipdb==0.13.13
 debugpy==1.8.0
 anthropic==0.34.0
 
+# AWS Dependencies
+boto3>=1.28.0
+
 # WhatsApp Service Dependencies
 twilio==8.10.0
 brotli>=1.1.0

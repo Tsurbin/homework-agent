@@ -1,0 +1,63 @@
+# Docker Compose for Homework Agent
+# Use this for local testing of all services together
+
+version: '3.8'
+
+services:
+  # Python Agent - Handles AI queries and DynamoDB access
+  python-agent:
+    build:
+      context: .
+      dockerfile: agent/Dockerfile
+    container_name: homework-python-agent
+    ports:
+      - "9000:9000"
+    environment:
+      - PORT=9000
+      - HOST=0.0.0.0
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - DYNAMODB_TABLE_NAME=${DYNAMODB_TABLE_NAME:-homework-items}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - HW_USERNAME=${HW_USERNAME}
+      - HW_PASSWORD=${HW_PASSWORD}
+      - LOGIN_URL=${LOGIN_URL}
+      - HOMEWORK_URL=${HOMEWORK_URL}
+    networks:
+      - homework-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:9000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Node Server - API gateway that forwards requests to Python agent
+  node-server:
+    build:
+      context: ./node-server
+      dockerfile: Dockerfile
+    container_name: homework-node-server
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - AGENT_URL=http://python-agent:9000
+      - ALLOWED_ORIGINS=http://localhost:5173
+      - NODE_ENV=development
+    depends_on:
+      python-agent:
+        condition: service_healthy
+    networks:
+      - homework-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+networks:
+  homework-network:
+    driver: bridge
