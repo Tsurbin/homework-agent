@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { getAllTools }from '../tools';
-import logger from '../utils/logger';
-import { getSecret } from '../utils/secrets';
+import { getAllTools }from '../tools/index.js';
+import logger from '../utils/logger.js';
+import { getSecret } from '../utils/secrets.js';
 import { error } from 'console';
 
 

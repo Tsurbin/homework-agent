@@ -1,5 +1,5 @@
-import { DynamoDBService } from '../services/dynamoDbService';
-import logger from '../utils/logger';
+import { DynamoDBService } from '../services/dynamoDbService.js';
+import logger from '../utils/logger.js';
 
 
 interface getHomeworkByDateInputType {
@@ -24,7 +24,7 @@ export class ToolHandler {
     private dbService;
     
     constructor() {
-        this.dbService = new DynamoDBService(process.env.HOMEWORK_TABLE_NAME);
+        this.dbService = new DynamoDBService(process.env.DYNAMODB_TABLE_NAME || process.env.HOMEWORK_TABLE_NAME);
     }
 
     async executeTool<T>(toolName: string, toolInput: T) {

@@ -26,10 +26,38 @@
             "Resource": "*"
         },
         {
-            "Sid": "IAMPassRole",
+            "Sid": "LambdaFullAccess",
             "Effect": "Allow",
             "Action": [
-                "iam:PassRole"
+                "lambda:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "APIGatewayFullAccess",
+            "Effect": "Allow",
+            "Action": [
+                "apigateway:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "IAMForLambda",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:PutRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:GetRole",
+                "iam:GetRolePolicy",
+                "iam:PassRole",
+                "iam:TagRole",
+                "iam:UntagRole",
+                "iam:ListRolePolicies",
+                "iam:ListAttachedRolePolicies"
             ],
             "Resource": "*"
         }

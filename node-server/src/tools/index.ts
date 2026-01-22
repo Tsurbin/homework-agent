@@ -1,4 +1,4 @@
-import { homeworkTools } from './homeworkTools';
+import { homeworkTools } from './homeworkTools.js';
 
 export const getAllTools = () => {
   return [
