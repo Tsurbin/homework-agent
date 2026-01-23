@@ -62,10 +62,19 @@ export class ClaudeService {
 
             Current date: ${new Date().toISOString().split('T')[0]}
 
-            You have access to tools that can query the homework database. Use these tools when:
+            LANGUAGE RULES:
+            - Detect the language of the user's message
+            - If the user writes in Hebrew, respond entirely in Hebrew
+            - If the user writes in English, respond entirely in English
+            - Match the user's language consistently throughout the conversation
+
+            You have access to tools that can query the homework database and the weekly schedule. Use these tools when:
             - A student asks about specific homework assignments
             - A student wants to know what's due on a particular date
             - A student asks about upcoming homework
+            - A student asks about their class schedule
+            - A student asks what to bring to school (workbooks, materials)
+            - A student asks about specific subjects or classes
 
             Important guidelines:
             - Only use tools when you need specific homework data from the database
