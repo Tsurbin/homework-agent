@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda + API Gateway for Homework Agent Server
+
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - prod
+      - staging
+    Description: Environment name
+  
+  AllowedOrigins:
+    Type: String
+    Default: "https://d11ppd1e1sqsv0.cloudfront.net,http://localhost:5173,http://localhost:3000"
+    Description: Comma-separated list of allowed CORS origins
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs20.x
+    MemorySize: 512
+
+Resources:
+  # Lambda Function
+  HomeworkAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub homework-agent-server-${Environment}
+      CodeUri: ./dist-lambda/
+      Handler: lambda.handler
+      Description: Homework Agent API Server
+      Environment:
+        Variables:
+          NODE_ENV: production
+          AWS_SECRET_NAME: homework-agent/secrets
+          ALLOWED_ORIGINS: !Ref AllowedOrigins
+          HOMEWORK_TABLE_NAME: homework-items
+          WEEKLY_PLAN_TABLE_NAME: weekly-plan
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: 
+                - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:homework-agent/secrets-*
+                - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:homework-agent/*
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+              Resource: 
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/homework-*
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/weekly-plan
+      Events:
+        ProxyApiRoot:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: ANY
+            ApiId: !Ref HttpApi
+        ProxyApiAll:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            ApiId: !Ref HttpApi
+
+  # HTTP API Gateway (cheaper than REST API)
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+      CorsConfiguration:
+        AllowOrigins:
+          - "https://d11ppd1e1sqsv0.cloudfront.net"
+          - "http://localhost:5173"
+          - "http://localhost:3000"
+        AllowMethods:
+          - "*"
+        AllowHeaders:
+          - "*"
+        ExposeHeaders:
+          - "*"
+        MaxAge: 3600
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway URL
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiUrl
+
+  FunctionArn:
+    Description: Lambda Function ARN
+    Value: !GetAtt HomeworkAgentFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-FunctionArn
+
+  FunctionName:
+    Description: Lambda Function Name
+    Value: !Ref HomeworkAgentFunction
+    Export:
+      Name: !Sub ${AWS::StackName}-FunctionName

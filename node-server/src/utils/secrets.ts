@@ -11,13 +11,19 @@ export async function getSecrets(): Promise<Record<string, string>> {
   const secretName = process.env.AWS_SECRET_NAME || 'homework-agent/secrets';
   const region = process.env.AWS_REGION || 'us-east-1';
 
-  const client = new SecretsManagerClient({ 
-    region,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
-    }
-  });
+  // Don't pass explicit credentials - let SDK use IAM role in Lambda
+  // or default credential chain (env vars, ~/.aws/credentials) locally
+  const clientConfig: { region: string; credentials?: { accessKeyId: string; secretAccessKey: string } } = { region };
+  
+  // Only use explicit credentials if running locally (not in Lambda)
+  if (!process.env.AWS_LAMBDA_FUNCTION_NAME && process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+    clientConfig.credentials = {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    };
+  }
+
+  const client = new SecretsManagerClient(clientConfig);
 
   try {
     const response = await client.send(

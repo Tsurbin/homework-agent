@@ -1,7 +1,7 @@
-import { ClaudeService } from './cloudeService';
-import { ToolHandler } from '../handlers/toolHandler';
-import logger from '../utils/logger';
-import { getSecret } from '../utils/secrets';
+import { ClaudeService } from './cloudeService.js';
+import { ToolHandler } from '../handlers/toolHandler.js';
+import logger from '../utils/logger.js';
+import { getSecret } from '../utils/secrets.js';
 
 
 

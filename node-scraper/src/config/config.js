@@ -7,9 +7,15 @@ dotenv.config();
 const config = {
     LOGIN_URL: process.env.LOGIN_URL || "https://webtop.smartschool.co.il/account/login",
     HOMEWORK_URL: process.env.HOMEWORK_URL || "https://webtop.smartschool.co.il/Student_Card/11",
+    WEEKLY_PLAN_URL: process.env.WEEKLY_PLAN_URL || "https://webtop.smartschool.co.il/Weekly_Plan",
     HW_USERNAME: process.env.HW_USERNAME,
     HW_PASSWORD: process.env.HW_PASSWORD,
     DYNAMODB_TABLE_NAME: process.env.DYNAMODB_TABLE_NAME || 'homework-items',
+    WEEKLY_PLAN_TABLE_NAME: process.env.WEEKLY_PLAN_TABLE_NAME || 'weekly-plan',
+    
+    // Navigation timeouts (ms)
+    NAVIGATION_TIMEOUT: parseInt(process.env.NAVIGATION_TIMEOUT) || 30000,
+    SELECTOR_TIMEOUT: parseInt(process.env.SELECTOR_TIMEOUT) || 10000,
     
     // Add these selectors based on your actual form
     USERNAME_SELECTOR: '#userName', // Update with actual selector
