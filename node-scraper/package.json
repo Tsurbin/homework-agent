@@ -7,12 +7,16 @@
   "scripts": {
     "start": "node src/index.js",
     "start:historical": "node src/index.js --historical",
-    "test": "jest"
+    "test:lambda": "node test-lambda-local.js",
+    "test": "jest",
+    "deploy": "./deploy.sh deploy"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.500.0",
     "@sparticuz/chromium": "^141.0.0",
     "aws-sdk": "^2.1500.0",
     "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
     "playwright": "^1.56.0",
     "playwright-core": "^1.56.1"
   },

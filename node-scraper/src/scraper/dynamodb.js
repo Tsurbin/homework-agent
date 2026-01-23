@@ -52,7 +52,7 @@ class HomeworkItem {
  * - Attributes: description, due_date, homework_text, created_at, updated_at
  */
 class DynamoDBHandler {
-    constructor(tableName, regionName = process.env.AWS_REGION || 'us-east-1') {
+    constructor(tableName, regionName = 'us-east-1') {
         this.tableName = tableName;
         this.regionName = regionName;
 
@@ -395,7 +395,7 @@ class WeeklyPlanItem {
  * - Attributes: teacher, subject, class_description, class_comments, day_name, created_at, updated_at
  */
 class WeeklyPlanDynamoDBHandler {
-    constructor(tableName, regionName = process.env.AWS_REGION || 'us-east-1') {
+    constructor(tableName, regionName = 'us-east-1') {
         this.tableName = tableName;
         this.regionName = regionName;
 

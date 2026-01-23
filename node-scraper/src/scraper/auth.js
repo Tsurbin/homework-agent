@@ -2,18 +2,49 @@ import { chromium } from 'playwright';
 import config from '../config/config.js';
 
 /**
+ * Check if running in AWS Lambda environment
+ */
+function isLambdaEnvironment() {
+    return !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+}
+
+/**
+ * Launch browser - uses @sparticuz/chromium in Lambda, regular Playwright locally
+ */
+async function launchBrowser() {
+    const isLambda = isLambdaEnvironment();
+    const isHeadless = process.env.PLAYWRIGHT_HEADLESS !== 'false';
+    
+    console.log(`Launching browser in ${isLambda ? 'Lambda' : 'local'} mode (headless: ${isHeadless})`);
+    
+    if (isLambda) {
+        // Dynamic import for Lambda - @sparticuz/chromium
+        const chromiumModule = await import('@sparticuz/chromium');
+        const sparticuzChromium = chromiumModule.default;
+        const { chromium: playwrightCore } = await import('playwright-core');
+        
+        return await playwrightCore.launch({
+            args: sparticuzChromium.args,
+            defaultViewport: sparticuzChromium.defaultViewport,
+            executablePath: await sparticuzChromium.executablePath(),
+            headless: sparticuzChromium.headless,
+        });
+    } else {
+        // Local development - regular Playwright
+        return await chromium.launch({
+            headless: isHeadless,
+        });
+    }
+}
+
+/**
  * Performs login and returns browser session WITHOUT navigating to any specific page.
  * Use this when you need to navigate to multiple pages or a custom destination.
  * 
  * @returns {Promise<{page: Page, context: BrowserContext, browser: Browser}>}
  */
 export async function loginAndGetSession() {
-    const isHeadless = process.env.PLAYWRIGHT_HEADLESS !== 'false';
-    console.log(`Launching browser in ${isHeadless ? 'headless' : 'visible'} mode`);
-    
-    const browser = await chromium.launch({
-        headless: isHeadless,
-    });
+    const browser = await launchBrowser();
 
     const context = await browser.newContext({
         ignoreHTTPSErrors: true,
@@ -45,14 +76,8 @@ export async function loginAndGetSession() {
  */
 export async function loginAndGetWebToken() {
 
-    // Use regular Playwright for local development
-    // Set headless based on environment variable, default to true to save memory
-    const isHeadless = process.env.PLAYWRIGHT_HEADLESS !== 'false';
-    console.log(`Launching browser in ${isHeadless ? 'headless' : 'visible'} mode`);
-    
-    const browser = await chromium.launch({
-        headless: isHeadless,
-    });
+    // Use the shared launchBrowser function (handles Lambda vs local)
+    const browser = await launchBrowser();
 
 
     const context = await browser.newContext({

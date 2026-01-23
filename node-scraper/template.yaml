@@ -1,0 +1,232 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Homework & Weekly Plan Scraper Lambda
+  Runs in il-central-1 with scheduled EventBridge triggers
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues:
+      - production
+      - staging
+    Description: Environment name
+  
+  SecretsName:
+    Type: String
+    Default: homework-scraper-credentials
+    Description: Name of the secret in Secrets Manager containing username and password
+  
+  SecretsRegion:
+    Type: String
+    Default: us-east-1
+    Description: Region where the secret is stored (can be different from Lambda region)
+  
+  HomeworkTableName:
+    Type: String
+    Default: homework-items
+    Description: DynamoDB table name for homework items
+  
+  WeeklyPlanTableName:
+    Type: String
+    Default: weekly-plan
+    Description: DynamoDB table name for weekly plan items
+
+Globals:
+  Function:
+    Timeout: 300  # 5 minutes - Playwright scraping can take time
+    MemorySize: 2048  # 2GB - needed for Chromium
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+
+Resources:
+  # ============================================
+  # Lambda Function
+  # ============================================
+  
+  ScraperFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: homework-scraper
+      Description: Scrapes homework and weekly plan from school portal
+      CodeUri: ./
+      Handler: lambda.handler
+      Environment:
+        Variables:
+          NODE_ENV: production
+          SECRETS_NAME: !Ref SecretsName
+          SECRETS_REGION: !Ref SecretsRegion
+          DYNAMODB_TABLE_NAME: !Ref HomeworkTableName
+          WEEKLY_PLAN_TABLE_NAME: !Ref WeeklyPlanTableName
+          LOGIN_URL: https://webtop.smartschool.co.il/account/login
+          HOMEWORK_URL: https://webtop.smartschool.co.il/Student_Card/11
+          WEEKLY_PLAN_URL: https://webtop.smartschool.co.il/Weekly_Plan
+      Policies:
+        # DynamoDB permissions (cross-region access to us-east-1)
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+                - dynamodb:BatchGetItem
+                - dynamodb:BatchWriteItem
+                - dynamodb:DescribeTable
+              Resource:
+                - !Sub arn:aws:dynamodb:us-east-1:${AWS::AccountId}:table/${HomeworkTableName}
+                - !Sub arn:aws:dynamodb:us-east-1:${AWS::AccountId}:table/${HomeworkTableName}/index/*
+                - !Sub arn:aws:dynamodb:us-east-1:${AWS::AccountId}:table/${WeeklyPlanTableName}
+                - !Sub arn:aws:dynamodb:us-east-1:${AWS::AccountId}:table/${WeeklyPlanTableName}/index/*
+        # Secrets Manager permissions (cross-region access to us-east-1)
+        - Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Sub arn:aws:secretsmanager:${SecretsRegion}:${AWS::AccountId}:secret:${SecretsName}*
+      Tags:
+        Environment: !Ref Environment
+        Application: homework-scraper
+
+  # ============================================
+  # EventBridge Scheduler Rules
+  # ============================================
+  
+  # Schedule: Sunday-Thursday 10:00, 13:00, 16:00 Israel time (UTC+2/+3)
+  # Israel is UTC+2 (winter) or UTC+3 (summer/DST)
+  # Using UTC+3 (Israel Standard Time in summer):
+  # 10:00 IST = 07:00 UTC
+  # 13:00 IST = 10:00 UTC
+  # 16:00 IST = 13:00 UTC
+  
+  # Using UTC+2 (Israel Standard Time in winter):
+  # 10:00 IST = 08:00 UTC
+  # 13:00 IST = 11:00 UTC
+  # 16:00 IST = 14:00 UTC
+  
+  # We'll use a middle-ground approach with cron expressions
+  # Note: Cron uses UTC time
+  
+  # Weekday Schedule: Sunday(1) through Thursday(5) at 10:00, 13:00, 16:00 Israel time
+  # Sunday = 1, Monday = 2, ... in AWS (1-7, Sunday is 1)
+  WeekdaySchedule10AM:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: homework-scraper-weekday-10am
+      Description: "Run scraper at 10:00 Israel time (Sun-Thu)"
+      ScheduleExpression: "cron(0 7 ? * 1,2,3,4,5 *)"  # 07:00 UTC = 10:00 IST (summer)
+      State: ENABLED
+      Targets:
+        - Id: ScraperFunctionTarget
+          Arn: !GetAtt ScraperFunction.Arn
+          Input: '{"source": "scheduled", "schedule": "weekday-10am"}'
+
+  WeekdaySchedule1PM:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: homework-scraper-weekday-1pm
+      Description: "Run scraper at 13:00 Israel time (Sun-Thu)"
+      ScheduleExpression: "cron(0 10 ? * 1,2,3,4,5 *)"  # 10:00 UTC = 13:00 IST (summer)
+      State: ENABLED
+      Targets:
+        - Id: ScraperFunctionTarget
+          Arn: !GetAtt ScraperFunction.Arn
+          Input: '{"source": "scheduled", "schedule": "weekday-1pm"}'
+
+  WeekdaySchedule4PM:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: homework-scraper-weekday-4pm
+      Description: "Run scraper at 16:00 Israel time (Sun-Thu)"
+      ScheduleExpression: "cron(0 13 ? * 1,2,3,4,5 *)"  # 13:00 UTC = 16:00 IST (summer)
+      State: ENABLED
+      Targets:
+        - Id: ScraperFunctionTarget
+          Arn: !GetAtt ScraperFunction.Arn
+          Input: '{"source": "scheduled", "schedule": "weekday-4pm"}'
+
+  # Friday Schedule: 12:00 and 15:00 Israel time
+  FridaySchedule12PM:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: homework-scraper-friday-12pm
+      Description: "Run scraper at 12:00 Israel time (Friday)"
+      ScheduleExpression: "cron(0 9 ? * 6 *)"  # 09:00 UTC = 12:00 IST (summer)
+      State: ENABLED
+      Targets:
+        - Id: ScraperFunctionTarget
+          Arn: !GetAtt ScraperFunction.Arn
+          Input: '{"source": "scheduled", "schedule": "friday-12pm"}'
+
+  FridaySchedule3PM:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: homework-scraper-friday-3pm
+      Description: "Run scraper at 15:00 Israel time (Friday)"
+      ScheduleExpression: "cron(0 12 ? * 6 *)"  # 12:00 UTC = 15:00 IST (summer)
+      State: ENABLED
+      Targets:
+        - Id: ScraperFunctionTarget
+          Arn: !GetAtt ScraperFunction.Arn
+          Input: '{"source": "scheduled", "schedule": "friday-3pm"}'
+
+  # ============================================
+  # Lambda Permissions for EventBridge
+  # ============================================
+  
+  PermissionForWeekday10AM:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ScraperFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt WeekdaySchedule10AM.Arn
+
+  PermissionForWeekday1PM:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ScraperFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt WeekdaySchedule1PM.Arn
+
+  PermissionForWeekday4PM:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ScraperFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt WeekdaySchedule4PM.Arn
+
+  PermissionForFriday12PM:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ScraperFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt FridaySchedule12PM.Arn
+
+  PermissionForFriday3PM:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ScraperFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt FridaySchedule3PM.Arn
+
+Outputs:
+  ScraperFunctionArn:
+    Description: ARN of the Scraper Lambda function
+    Value: !GetAtt ScraperFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-ScraperFunctionArn
+
+  ScheduleSummary:
+    Description: Summary of scheduled execution times (Israel Time)
+    Value: |
+      Sun-Thu: 10:00, 13:00, 16:00
+      Friday: 12:00, 15:00
