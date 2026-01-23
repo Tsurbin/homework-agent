@@ -37,6 +37,7 @@ Resources:
           AWS_SECRET_NAME: homework-agent/secrets
           ALLOWED_ORIGINS: !Ref AllowedOrigins
           HOMEWORK_TABLE_NAME: homework-items
+          WEEKLY_PLAN_TABLE_NAME: weekly-plan
       Policies:
         - Version: '2012-10-17'
           Statement:
@@ -54,7 +55,9 @@ Resources:
                 - dynamodb:DeleteItem
                 - dynamodb:Query
                 - dynamodb:Scan
-              Resource: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/homework-*
+              Resource: 
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/homework-*
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/weekly-plan
       Events:
         ProxyApiRoot:
           Type: HttpApi
