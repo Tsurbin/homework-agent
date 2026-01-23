@@ -5,6 +5,12 @@ const systemMessage = {
   content: "Hey there! Ask me anything and I'll forward it to the agent.",
 };
 
+// Detect if text contains Hebrew characters
+const isHebrew = (text: string): boolean => {
+  const hebrewRegex = /[\u0590-\u05FF]/;
+  return hebrewRegex.test(text);
+};
+
 export default function Chat() {
   const [messages, setMessages] = useState([systemMessage]);
   const [input, setInput] = useState("");
@@ -87,6 +93,7 @@ export default function Chat() {
                   ? "bg-emerald-500/90 text-white"
                   : "bg-slate-800 text-slate-100"
               }`}
+              dir={isHebrew(msg.content) ? "rtl" : "ltr"}
             >
               {msg.content}
             </div>
