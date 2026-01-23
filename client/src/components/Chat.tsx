@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 const systemMessage = {
   role: "assistant",
-  content: "?הי, אני ציפיבוט. מה תרצה לדעת על שיעורי בית או לוז שבועי",
+  content: "הי, אני ציפיבוט. מה תרצו לדעת על שיעורי בית או לוז שבועי?",
 };
 
 // Detect if text contains Hebrew characters
