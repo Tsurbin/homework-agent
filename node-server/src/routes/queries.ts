@@ -31,7 +31,7 @@ queries.get('/homework-by-date', async (req: Request, res: Response, next: NextF
         const toolHandler = new ToolHandler();
         // Convert to ISO date string (YYYY-MM-DD) for DynamoDB
         const dateStr = new Date(date as string).toISOString().split('T')[0];
-        const result = await toolHandler.handleGetAllHomeworkForDate({ date: dateStr as any });
+        const result = await toolHandler.handleGetAllHomeworkForDate({ date: dateStr });
         
         return res.json(result);
     } catch (error) {
@@ -42,12 +42,12 @@ queries.get('/homework-by-date', async (req: Request, res: Response, next: NextF
 // Test endpoint for getHomeworkByDateRange
 queries.get('/homework-by-date-range', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { class_name, start_date, end_date } = req.query;
+        const { subject, start_date, end_date } = req.query;
         
-        if (!class_name || !start_date || !end_date) {
+        if (!subject || !start_date || !end_date) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'class_name, start_date, and end_date query parameters are required' 
+                message: 'subject, start_date, and end_date query parameters are required' 
             });
         }
         
@@ -57,9 +57,9 @@ queries.get('/homework-by-date-range', async (req: Request, res: Response, next:
         const endDateStr = new Date(end_date as string).toISOString().split('T')[0];
         
         const result = await toolHandler.handleGetHomeworkByDateRange({ 
-            class_name: class_name as string, 
-            start_date: startDateStr as any, 
-            end_date: endDateStr as any 
+            subject: subject as string, 
+            start_date: startDateStr, 
+            end_date: endDateStr 
         });
         
         return res.json(result);

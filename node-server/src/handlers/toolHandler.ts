@@ -4,18 +4,18 @@ import logger from '../utils/logger.js';
 
 
 interface getHomeworkByDateInputType {
-    class_name: string, 
-    date: Date, 
+    subject: string, 
+    date: string, 
 }
 
 interface getHomeworkByDateRangeInputType {
-    class_name: string, 
-    start_date: Date, 
-    end_date: Date
+    subject: string, 
+    start_date: string, 
+    end_date: string
 }
 
 interface getUpcomingHomeworkInputType {
-    class_name: string, 
+    subject: string, 
     limit: number
 }
 
@@ -73,13 +73,13 @@ export class ToolHandler {
     }
 
 
-    async handleGetHomeworkByDate({ class_name, date }: getHomeworkByDateInputType) {
-        const results = await this.dbService.getHomeworkByDate(class_name, date);
+    async handleGetHomeworkByDate({ subject, date }: getHomeworkByDateInputType) {
+        const results = await this.dbService.getHomeworkByDate(subject, date);
         
         if (results.length === 0) {
             return { 
                 success: true,
-                message: `No homework found for ${class_name} on ${date}`,
+                message: `No homework found for ${subject} on ${date}`,
                 data: []
             };
         }
@@ -90,8 +90,8 @@ export class ToolHandler {
         };
     }
 
-    async handleGetHomeworkByDateRange({ class_name, start_date, end_date }: getHomeworkByDateRangeInputType) {
-        const results = await this.dbService.getHomeworkByDateRange(class_name, start_date, end_date);
+    async handleGetHomeworkByDateRange({ subject, start_date, end_date }: getHomeworkByDateRangeInputType) {
+        const results = await this.dbService.getHomeworkByDateRange(subject, start_date, end_date);
     
         return {
             success: true,
@@ -100,7 +100,7 @@ export class ToolHandler {
         };
     }
     
-    async handleGetAllHomeworkForDate({ date }: { date: Date }) {
+    async handleGetAllHomeworkForDate({ date }: { date: string }) {
         const results = await this.dbService.getAllHomeworkForDate(date);
         
         return {
@@ -110,8 +110,8 @@ export class ToolHandler {
         };
     }
 
-    async handleGetUpcomingHomework({ class_name, limit = 10 }: getUpcomingHomeworkInputType) {
-        const results = await this.dbService.getUpcomingHomework(class_name, limit);
+    async handleGetUpcomingHomework({ subject, limit = 10 }: getUpcomingHomeworkInputType) {
+        const results = await this.dbService.getUpcomingHomework(subject, limit);
         
         return {
             success: true,
