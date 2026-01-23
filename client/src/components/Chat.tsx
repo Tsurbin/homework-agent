@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 const systemMessage = {
   role: "assistant",
-  content: "Hey there! Ask me anything and I'll forward it to the agent.",
+  content: "?הי, אני ציפיבוט. מה תרצה לדעת על שיעורי בית או לוז שבועי",
 };
 
 // Detect if text contains Hebrew characters
@@ -72,11 +72,8 @@ export default function Chat() {
     <div className="flex h-screen max-h-screen flex-col overflow-hidden bg-slate-950">
       <header className="flex-shrink-0 border-b border-slate-800 bg-slate-900/80 px-4 py-2 backdrop-blur">
         <h1 className="text-lg font-semibold text-white">
-          Homework Agent Chat
+          Zipi Agent Chat
         </h1>
-        <p className="text-xs text-slate-400">
-          GPT-like interface powered by your in-house agent
-        </p>
       </header>
 
       <main className="flex flex-1 flex-col gap-4 overflow-y-auto p-6 min-h-0">
