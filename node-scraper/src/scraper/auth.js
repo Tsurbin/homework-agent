@@ -48,7 +48,8 @@ export async function loginAndGetSession() {
 
     const context = await browser.newContext({
         ignoreHTTPSErrors: true,
-        acceptDownloads: true
+        acceptDownloads: true,
+        timezoneId: 'Asia/Jerusalem'
     });
     const page = await context.newPage();
 
@@ -82,7 +83,8 @@ export async function loginAndGetWebToken() {
 
     const context = await browser.newContext({
         ignoreHTTPSErrors: true, // This will ignore SSL certificate errors
-        acceptDownloads: true
+        acceptDownloads: true,
+        timezoneId: 'Asia/Jerusalem'
     });
     const page = await context.newPage();
 
