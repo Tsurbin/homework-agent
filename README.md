@@ -333,13 +333,6 @@ homework-agent/
 ├── iam-policy.json
 └── README.md                 # This file - Project overview
 ```
-├── config/                   # Configuration files
-├── tests/                    # Test files
-├── cloudformation-template.json
-├── deploy-lambda-runner.sh
-├── iam-policy.json
-└── README.md
-```
 
 ## 🔒 Security
 
